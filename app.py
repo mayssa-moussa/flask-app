@@ -6,9 +6,7 @@ from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 import os
 from models import db, Gouvernorat, Admin
-import warnings
-from openpyxl import warnings as openpyxl_warnings
-warnings.filterwarnings("ignore", category=openpyxl_warnings.UserWarning)
+
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'votre_cle_secrete_complexe_ici'  # Ajouter une clé secrète
