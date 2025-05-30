@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ton-app
+    name: flask-app
     env: python
     buildCommand: |
       apt-get update && \
