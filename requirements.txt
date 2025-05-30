@@ -9,3 +9,4 @@ gevent==24.2.1
 email-validator==2.1.1
 python-dotenv==1.0.1
 numpy==1.26.4  # Version spécifique compatible avec pandas 2.1.x
+geopandas==0.14.3
