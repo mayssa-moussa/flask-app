@@ -6,6 +6,9 @@ from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 import os
 from models import db, Gouvernorat, Admin
+import warnings
+from openpyxl import warnings as openpyxl_warnings
+warnings.filterwarnings("ignore", category=openpyxl_warnings.UserWarning)
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'votre_cle_secrete_complexe_ici'  # Ajouter une clé secrète
@@ -187,4 +190,5 @@ def get_indicators():
         return jsonify({"error": str(e)}), 500 """
 
 if __name__ == "__main__":
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))  # Ligne modifiée
+    app.run(host='0.0.0.0', port=port, debug=False) 
