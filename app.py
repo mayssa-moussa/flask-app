@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
