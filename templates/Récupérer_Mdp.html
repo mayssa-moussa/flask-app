@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Récupérer mot de passe</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="d-flex align-items-center min-vh-100" style="background: #f0f2f5;">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="modal-content p-4" style="
+                border-radius: 20px;
+                background-color: #f8f9fa;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            ">
+                <!-- En-tête -->
+                <div class="modal-header border-0 justify-content-center">
+                    <h4 class="modal-title fw-bold text-center" style="color: #5b2be0;">
+                        <i class="bi bi-shield-lock-fill me-2"></i> Connexion Admin
+                    </h4>
+                </div>
+
+                <!-- Ajoutez la section d'erreur -->
+                    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show mx-4 mt-2" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                <!-- Formulaire -->
+                <form method="POST" action="{{ url_for('reset_password', token=token) }}" autocomplete="off">
+                    
+                    <div class="modal-body pt-0">
+                        <!-- Champ Mot de passe -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Récupérer Mot de passe</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-lock-fill text-secondary"></i>
+                                </span>
+                                <input type="password"
+                                       autocomplete="off" 
+                                       class="form-control border-start-0" 
+                                       id="password" 
+                                       name="password" 
+                                       required 
+                                       placeholder="mot de passe">
+                            </div>
+                        </div>
+
+                        <!-- Champ confirmer mot de passe -->
+                        <div class="mb-5">
+                            <label for="confirmed_password" class="form-label">Confirmer Nouveau Mot de passe</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-lock-fill text-secondary"></i>
+                                </span>
+                                
+                                <input type="password" 
+                                       autocomplete="new-password"
+                                       class="form-control border-start-0" 
+                                       id="confirmed_password" 
+                                       name="confirmed_password" 
+                                       required 
+                                       placeholder="mot de passe">
+                            </div>
+                        </div>
+
+                        <!-- Bouton de soumission -->
+                        <div class="text-center mb-4">
+                            <button type="submit" 
+                                    class="btn text-white w-100 py-2" 
+                                    style="
+                                        background: linear-gradient(to right, #8e2de2, #18A0FB);
+                                        border: none;
+                                        border-radius: 30px;
+                                        font-weight: 500;
+                                        font-size: 1.1rem;
+                                        transition: transform 0.2s;
+                                    "
+                                    onmouseover="this.style.transform='scale(1.02)'"
+                                    onmouseout="this.style.transform='scale(1)'">
+                                Confirmer
+                            </button>
+                        </div>
+
+        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

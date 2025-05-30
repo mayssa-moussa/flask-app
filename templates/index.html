@@ -1,0 +1,1096 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard</title>
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Bootstrap icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <!-- Font Awesome -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <!--  Inclure SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <!-- Ajouter Plotly-->
+        <script src="https://cdn.plot.ly/plotly-2.18.2.min.js"></script>
+        <!-- Ajouter Leaflet pour la carte -->
+        <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    </head>
+    
+<body>
+<!--     <header style="background: linear-gradient(to right, #8e2de2, #18A0FB); padding: 0.75rem 1.5rem;" class="d-flex justify-content-between align-items-center shadow">
+        <h5 class="text-white m-0">📡 Cartographie Mobile</h5>
+        <a href="/admin/login" class="btn btn-outline-light d-flex align-items-center">
+            <i class="bi bi-person-circle me-2" style="font-size: 1.2rem;"></i> Se connecter
+        </a>
+    </header> -->
+
+    
+    
+       
+     
+<div class="d-flex">
+    <!-- Sidebar -->
+        <div class="sidebar p-3" style="width: 250px;">
+            <!-- Partie 1: Zone géographique -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Zone géographique
+                </h4>
+                
+                <select class="form-select mb-3" id="select-gouvernorat">
+                    <option value="" selected disabled>Gouvernorat</option>
+                    {% for gouvernorat in data %}
+                        <option value="{{ gouvernorat }}">{{ gouvernorat|capitalize }}</option>
+                    {% endfor %}
+                </select>
+                
+                
+                <select class="form-select mb-3" id="select-delegation" disabled>
+                    <option value="" selected disabled>Délégation</option>
+                </select>
+                
+                
+                <select class="form-select mb-3" id="select-secteur" disabled>
+                    <option value="" selected disabled>Secteur</option>
+                </select>
+            </div>
+
+            <br>
+
+            <!-- Partie 2: Réseau Mobile -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    Opérateurs
+                </h4>
+                <div class="d-grid gap-3" id="operators">
+                    <div class="card operator-card" data-operator="Ooredoo TN">
+                        <div class="card-body p-2">
+                            <h5 class="card-title m-0 d-flex align-items-center">
+                                <img src="{{ url_for('static', filename='images/ooredoo.png') }}" alt="Ooredoo" class="operator-logo me-2">
+                                Ooredoo TN
+                                <i class="bi bi-check2 check-icon ms-auto"></i>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="card operator-card" data-operator="Orange TN">
+                        <div class="card-body p-2">
+                            <h5 class="card-title m-0 d-flex align-items-center">
+                                <img src="{{ url_for('static', filename='images/orange.png') }}" alt="Orange" class="operator-logo me-2">
+                                Orange TN
+                                <i class="bi bi-check2 check-icon ms-auto"></i>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="card operator-card" data-operator="Tunisie Telecom">
+                        <div class="card-body p-2">
+                            <h5 class="card-title m-0 d-flex align-items-center">
+                                <img src="{{ url_for('static', filename='images/Telecom.png') }}" alt="Telcom" class="operator-logo_telecom me-2">
+                                Tunisie Telecom
+                                <i class="bi bi-check2 check-icon ms-auto"></i>
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+           
+
+            <!-- Partie 3: Période d'analyse -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Période d'analyse
+                </h4>
+                
+                <select class="form-select mb-3" id="select-annee" disabled>
+                    <option value="">Année</option>
+                </select>
+
+                
+                <select class="form-select mb-3" id="select-mois" disabled>
+                    <option value="">Mois</option>
+                </select>
+            </div>
+</div>
+    
+    
+    
+    
+    
+
+    <!-- Content -->
+    <div class="container-fluid p-4">
+       
+<!-- Bouton qui ouvre le pop-up (modal) -->
+<a href="#"
+   class="btn text-white d-flex align-items-center py-1 px-3 position-absolute"
+   data-bs-toggle="modal"
+   data-bs-target="#adminLoginModal"
+   style="
+         top: 10px;
+         right: 10px;
+         font-size: 0.9rem;
+         background: linear-gradient(to right, #8e2de2, #18A0FB);
+         border: none;
+         border-radius: 20px;
+         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+         transition: transform 0.2s ease-in-out;
+         z-index: 1000;
+       "
+   onmouseover="this.style.transform='scale(1.05)'"
+   onmouseout="this.style.transform='scale(1)'">
+    <i class="bi bi-person-circle me-2" style="font-size: 1.2rem;"></i> Se connecter
+</a>
+
+
+     
+     </a>
+        <div class="titre-section">
+            <h4>Cartographie Interactive des Réseaux Mobiles</h4>
+        </div>
+       
+        
+        <div id="map-container" style="position: relative;">
+    <div id="map" style="height: 60vh; width: 100%; max-height: 600px;"></div>
+
+    <div id="layer-control" class="layer-control" >
+        <h5>Couches cartographiques</h5>
+        <div class="toggle-group">
+            <label class="switch-label">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="gouvernorats" name="layers">
+                    <span class="slider"></span>
+                </label>
+                <span class="layer-name">Gouvernorats</span>
+            </label>
+            <label class="switch-label">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="delegations" name="layers">
+                    <span class="slider"></span>
+                </label>
+                <span class="layer-name">Délégations</span>
+            </label>
+            <label class="switch-label">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="secteurs" name="layers">
+                    <span class="slider"></span>
+                </label>
+                <span class="layer-name">Secteurs</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+        
+        <div class="container my-4" id="info-paragraph">
+            
+                <div class="row g-0 align-items-center">
+                    <div class="col-md-12">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary d-flex align-items-center mb-4 fs-4">
+                                Présentation
+                            </h5>
+                            <p class="card-text text-muted fs-5" style="line-height: 1.8;">
+                                Ce portail est dédié à la présentation des résultats du projet d’évaluation de la qualité de service 2G/3G.
+                                Il permet à l’utilisateur de naviguer dans les données par gouvernorat, délégation ou par secteur, ainsi que de
+                                visualiser des graphes dynamiques permettant de comparer les taux et d’évaluer les performances des opérateurs.
+                            </p>
+                            
+                        </div>
+                    </div>
+                    
+                </div>
+            
+        </div>
+        
+        
+        
+        
+
+        <!-- Ajouter cette section après les cartes opérateurs -->
+        <div class="container my-5" id="graphs-container">
+            <!-- Les graphiques apparaîtront ici -->
+             
+        </div>
+                
+    </div>
+</div>
+
+<!-- Modal d'erreur -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="errorModalLabel">Données indisponibles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                <p class="lead">Les données pour ce gouvernorat ne sont pas encore disponibles.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+<!-- fontcion pour identifiés les opérateurs séléctionnés-->
+<script>
+    const operatorCards = document.querySelectorAll('.operator-card');
+const selectedOperators = new Set();
+
+operatorCards.forEach(card => {
+    card.addEventListener('click', () => {
+        const operator = card.getAttribute('data-operator');
+
+        // Toggle la sélection
+        if (selectedOperators.has(operator)) {
+            selectedOperators.delete(operator);
+            card.classList.remove('selected');
+        } else {
+            selectedOperators.add(operator);
+            card.classList.add('selected');
+        }
+
+        // Déclencher les mises à jour
+        resetMapToInitialState();
+        setTimeout(updateGraphs, 100);
+        
+        console.log("Opérateurs sélectionnés :", Array.from(selectedOperators));
+    });
+});
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let graphUpdatePaused = false;
+
+    function normaliserNom(nom) {
+    return nom
+        .normalize("NFD")                // Supprime les accents
+        .replace(/[\u0300-\u036f]/g, "") // Supprime les diacritiques
+        .toLowerCase()                  // Minuscule
+        .trim()                         // Enlève les espaces avant/après
+        .replace(/_+/g, ' ')            // Remplace les underscores par des espaces
+        .replace(/\s+/g, " ");          // Remplace les espaces multiples par un seul
+}
+
+
+    const data = {{ data | tojson | safe }};
+    const govSelect = document.getElementById('select-gouvernorat');
+    const delegationSelect = document.getElementById('select-delegation');
+    const secteurSelect = document.getElementById('select-secteur');
+
+    // Modifier l'initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    updateGraphs();
+    initMap(); // Initialiser directement la carte
+    window.mapInitialized = true;
+
+    // Masquer les graphes par défaut
+    document.getElementById('graphs-container').style.display = 'none';
+});
+
+
+    function setupEventListeners() {
+        document.querySelectorAll('.accordion-button').forEach(button => {
+            button.addEventListener('click', () => setTimeout(updateGraphs, 300));
+        });
+
+        document.querySelectorAll('.operator-card').forEach(card => {
+            card.addEventListener('click', () => {
+                resetMapToInitialState();
+                card.classList.toggle('selected');
+                setTimeout(updateGraphs, 100);
+            });
+        });
+
+        // Dans l'événement 'change' du gouvernorat
+govSelect.addEventListener('change', () => {
+    resetMapToInitialState();
+    const selectedGov = govSelect.value;
+    const delegations = data[selectedGov] ? Object.keys(data[selectedGov]) : [];
+
+    delegationSelect.innerHTML = '<option value="">Délégation</option>';
+    delegations.forEach(deleg => {
+        delegationSelect.innerHTML += `<option value="${deleg}">${deleg}</option>`;
+    });
+    delegationSelect.disabled = !selectedGov;
+
+    secteurSelect.innerHTML = '<option value="">Secteur</option>';
+    secteurSelect.disabled = true;
+
+    // Récupération des années
+    if (selectedGov) {
+        fetch('/get-dates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gouvernorat: selectedGov })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const anneeSelect = document.getElementById('select-annee');
+            const moisSelect = document.getElementById('select-mois');
+
+            // Activer/désactiver année
+            anneeSelect.disabled = data.years.length === 0;
+            
+            // Remplir les années
+            anneeSelect.innerHTML = '<option value="">Année</option>';
+            data.years.forEach(year => {
+                anneeSelect.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+
+            // Sélection auto si une seule année
+            if (data.years.length === 1) {
+                anneeSelect.value = data.years[0];
+                anneeSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Réinitialiser mois
+            moisSelect.innerHTML = '<option value="">Mois</option>';
+        moisSelect.disabled = true;
+    });
+    }
+
+    else {
+        document.getElementById('select-annee').disabled = true;
+        document.getElementById('select-mois').disabled = true;
+    }
+
+    updateGraphs();
+});
+
+// Nouvel événement pour le changement d'année
+document.getElementById('select-annee').addEventListener('change', async function() {
+    const selectedGov = govSelect.value;
+    const selectedYear = this.value;
+    const moisSelect = document.getElementById('select-mois');
+
+    if (selectedGov && selectedYear) {
+        const response = await fetch('/get-dates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                gouvernorat: selectedGov,
+                year: selectedYear 
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // Remplir les mois
+            moisSelect.innerHTML = '<option value="">Mois</option>';
+            if (data.months && data.months.length > 0) {
+                data.months.forEach(month => {
+                    moisSelect.innerHTML += `<option value="${month}">${month}</option>`;
+                });
+                moisSelect.disabled = false;
+                
+                // Sélection auto si un seul mois
+                if (data.months.length === 1) {
+                    moisSelect.value = data.months[0];
+                }
+            } else {
+                moisSelect.disabled = true;
+            }
+        }
+    } else {
+        moisSelect.innerHTML = '<option value="">Mois</option>';
+        moisSelect.disabled = true;
+    }
+    
+    resetMapToInitialState();
+    updateGraphs();
+});
+
+// Événement pour le changement de mois
+document.getElementById('select-mois').addEventListener('change', updateGraphs);
+
+        delegationSelect.addEventListener('change', () => {
+            resetMapToInitialState();
+            const selectedGov = govSelect.value;
+            const selectedDeleg = delegationSelect.value;
+            const secteurs = data[selectedGov]?.[selectedDeleg] || [];
+
+            secteurSelect.innerHTML = '<option value="">Secteur</option>';
+            secteurs.forEach(secteur => {
+                secteurSelect.innerHTML += `<option value="${secteur}">${secteur}</option>`;
+            });
+            secteurSelect.disabled = !selectedDeleg;
+
+            updateGraphs();
+        });
+
+        secteurSelect.addEventListener('change', () => {
+            resetMapToInitialState(); // Réinitialisation de la carte
+            updateGraphs(); // Mise à jour des graphes
+        });
+    }
+
+async function updateGraphs() {
+    if (graphUpdatePaused) return;
+
+    const govName = govSelect.value;
+    const delegationName = delegationSelect.value;
+    const secteurName = secteurSelect.value;
+    const selectedYear = document.getElementById('select-annee').value;
+    const selectedMonth = document.getElementById('select-mois').value;
+
+    // Vérifier si aucune date n'est sélectionnée
+    const noDateSelected = !selectedYear && !selectedMonth;
+
+    const selectedOperators = Array.from(document.querySelectorAll('.operator-card.selected'))
+        .map(card => card.dataset.operator);
+
+    const container = document.getElementById('graphs-container');
+
+    if (!govName || selectedOperators.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    try {
+        // Si aucune date n'est sélectionnée, on va chercher la date la plus récente
+        if (noDateSelected) {
+            const datesResponse = await fetch('/get-dates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gouvernorat: govName })
+            });
+            
+            if (datesResponse.ok) {
+                const datesData = await datesResponse.json();
+                if (datesData.years && datesData.years.length > 0) {
+                    // Sélectionner automatiquement l'année la plus récente
+                    const latestYear = datesData.years[0];
+                    document.getElementById('select-annee').value = latestYear;
+                    
+                    // Maintenant, récupérer les mois pour cette année
+                    const monthsResponse = await fetch('/get-dates', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            gouvernorat: govName,
+                            year: latestYear 
+                        })
+                    });
+                    
+                    if (monthsResponse.ok) {
+                        const monthsData = await monthsResponse.json();
+                        const moisSelect = document.getElementById('select-mois');
+                        
+                        // Remplir les mois
+                        moisSelect.innerHTML = '<option value="">Mois</option>';
+                        if (monthsData.months && monthsData.months.length > 0) {
+                            monthsData.months.forEach(month => {
+                                moisSelect.innerHTML += `<option value="${month}">${month}</option>`;
+                            });
+                            
+                            // Activer le select des mois
+                            moisSelect.disabled = false;
+                            
+                            // Sélectionner automatiquement le mois le plus récent
+                            const latestMonth = monthsData.months[monthsData.months.length - 1];
+                            moisSelect.value = latestMonth;
+                        } else {
+                            moisSelect.disabled = true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+        // Maintenant, procéder avec la génération des graphes
+        const response = await fetch('/generate_graphs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                gouvernorat: govName,
+                operateurs: selectedOperators,
+                delegation: delegationName || null,
+                secteur: secteurName || null,
+                year: document.getElementById('select-annee').value || null, 
+                month: document.getElementById('select-mois').value || null 
+            })
+        });
+
+        // Le reste de votre fonction reste inchangé...
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erreur serveur');
+        }
+
+        const result = await response.json();
+        container.innerHTML = result.html;
+        container.style.display = 'block';
+        document.getElementById('info-paragraph').style.display = 'none';
+        document.getElementById('map-container').style.display = 'block';
+
+        container.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+
+        container.style.transition = 'box-shadow 0.5s';
+        container.style.boxShadow = '0 0 15px rgba(0,119,255,0.3)';
+        setTimeout(() => {
+            container.style.boxShadow = '';
+        }, 1000);
+
+        container.querySelectorAll('script').forEach(script => {
+            const newScript = document.createElement('script');
+            newScript.textContent = script.textContent;
+            document.body.appendChild(newScript).remove();
+        });
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: error.message,
+        });
+    }
+}
+</script>
+
+<script>
+    
+
+    function initMap() {
+        // Coordonnées d'El Haouaria : [37.05, 11.00] avec zoom level 12
+        window.map = L.map('map').setView([37.05, 11.00], 9);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.map);
+
+        
+
+        window.activeLayer = null;
+
+        document.querySelectorAll('input[name="layers"]').forEach(toggle => {
+            toggle.addEventListener('change', async (e) => {
+        // Désactiver tous les autres
+        document.querySelectorAll('input[name="layers"]').forEach(other => {
+            if (other !== e.target) {
+                other.checked = false;
+            }
+        });
+
+        // Retirer la couche précédente si elle existe
+        if (window.activeLayer) {
+            window.map.removeLayer(window.activeLayer);
+            window.activeLayer = null;
+        }
+
+        // Si le bouton est désactivé, ne rien afficher
+        if (!e.target.checked) return;
+
+        const layerType = e.target.id;
+        const layerName = `${layerType}_TN`;
+
+        const response = await fetch(`/geojson/${layerName}`);
+        const data = await response.json();
+
+        window.activeLayer = L.geoJSON(data, {
+            style: {
+                weight: 2,
+                color: getLayerColor(layerType),
+                fillOpacity: 0.2
+            },
+                    onEachFeature: (feature, layer) => {
+                        layer.on({
+                            mouseover: (e) => {
+                                let nom;
+                                switch (layerType) {
+                                    case 'delegations':
+                                        nom = feature.properties.alt_name_f || 'Nom non défini';
+                                        break;
+                                    case 'gouvernorats':
+                                    case 'secteurs':
+                                    default:
+                                        nom = feature.properties.name_fr || 'Nom non défini';
+                                }
+
+                                if (!layer.getTooltip()) {
+                                    const content = `<strong>${nom}</strong>`;
+                                    layer.bindTooltip(content, {
+                                        permanent: false,
+                                        direction: 'auto',
+                                        className: 'clean-tooltip'
+                                    }).openTooltip();
+                                }
+
+                                layer.setStyle({ weight: 3 });
+                            },
+                            mouseout: (e) => {
+                                if (layer._map) {
+                                    layer.unbindTooltip();
+                                    layer.setStyle({ weight: 2 });
+                                }
+                            },
+                            click: async (e) => {
+                                const selectedOperators = Array.from(document.querySelectorAll('.operator-card.selected'));
+                                if (selectedOperators.length === 0) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Opérateurs manquants',
+                                        text: 'Veuillez sélectionner au moins un opérateur avant d’interagir avec la carte.',
+                                    });
+                                    return;
+                                }
+
+                                if (layerType === 'gouvernorats') {
+                                    const govName = feature.properties.name_fr?.trim();
+                                    const matchedGov = Array.from(govSelect.options).find(opt =>
+                                        opt.textContent.trim().toLowerCase() === govName.toLowerCase()
+                                    );
+                                    if (matchedGov) {
+                                        govSelect.value = matchedGov.value;
+                                        govSelect.dispatchEvent(new Event('change'));
+                                        updateGraphs();
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Données non disponibles',
+                                            text: `Les données pour le gouvernorat "${govName}" ne sont pas encore disponibles.`,
+                                        });
+                                    }
+                                }
+
+                                if (layerType === 'delegations') {
+                                    const govName = feature.properties.Nom_gouver?.trim();
+                                    const delegationName = feature.properties.alt_name_f?.trim();
+
+                                    const matchedGov = Array.from(govSelect.options).find(opt =>
+                                        opt.textContent.trim().toLowerCase() === govName.toLowerCase()
+                                    );
+                                    if (!matchedGov) {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Données non disponibles',
+                                            text: `Les données pour le gouvernorat "${govName}" ne sont pas encore disponibles.`,
+                                        });
+                                        return;
+                                    }
+
+                                    graphUpdatePaused = true;
+
+                                    govSelect.value = matchedGov.value;
+                                    govSelect.dispatchEvent(new Event('change'));
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    const matchedDeleg = Array.from(delegationSelect.options).find(opt =>
+                                        opt.textContent.trim().toLowerCase() === delegationName.toLowerCase()
+                                    );
+                                    if (!matchedDeleg) {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Données non disponibles',
+                                            text: `Les données pour la délégation "${delegationName}" ne sont pas encore disponibles.`,
+                                        });
+                                        return;
+                                    }
+
+                                    delegationSelect.value = matchedDeleg.value;
+                                    delegationSelect.dispatchEvent(new Event('change'));
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    graphUpdatePaused = false;
+                                    updateGraphs();
+                                }
+
+                                if (layerType === 'secteurs') {
+                                    const govName = feature.properties['Nom gouver']?.trim();
+                                    const delegationName = feature.properties['Nom_Delega']?.trim();
+                                    const secteurName = feature.properties.name_fr?.trim();
+
+                                    const matchedGov = Array.from(govSelect.options).find(opt =>
+                                        opt.textContent.trim().toLowerCase() === govName.toLowerCase()
+                                    );
+                                    if (!matchedGov) {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Données non disponibles',
+                                            text: `Les données pour le gouvernorat "${govName}" ne sont pas encore disponibles.`,
+                                        });
+                                        return;
+                                    }
+
+                                    graphUpdatePaused = true;
+
+                                    govSelect.value = matchedGov.value;
+                                    govSelect.dispatchEvent(new Event('change'));
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    const matchedDeleg = Array.from(delegationSelect.options).find(opt =>
+                                        opt.textContent.trim().toLowerCase() === delegationName.toLowerCase()
+                                    );
+                                    if (!matchedDeleg) {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Données non disponibles',
+                                            text: `Les données pour la délégation "${delegationName}" ne sont pas encore disponibles.`,
+                                        });
+                                        return;
+                                    }
+
+                                    delegationSelect.value = matchedDeleg.value;
+                                    delegationSelect.dispatchEvent(new Event('change'));
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    const matchedSecteur = Array.from(secteurSelect.options).find(opt =>
+                                        opt.textContent.trim().toLowerCase() === secteurName.toLowerCase()
+                                    );
+                                    if (!matchedSecteur) {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Données non disponibles',
+                                            text: `Les données pour le secteur "${secteurName}" ne sont pas encore disponibles.`,
+                                        });
+                                        return;
+                                    }
+
+                                    secteurSelect.value = matchedSecteur.value;
+                                    secteurSelect.dispatchEvent(new Event('change'));
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    graphUpdatePaused = false;
+                                    updateGraphs();
+                                }
+                                
+                            }
+                        });
+                    }
+                }).addTo(window.map);
+            });
+        });
+    }
+
+    function getLayerColor(layerType) {
+        const colors = {
+            gouvernorats: '#ff0000',
+            delegations: '#0000ff',
+            secteurs: '#00ff00'
+        };
+        return colors[layerType] || '#333';
+    }
+</script>
+
+
+
+<!--Fonction pour afficher une alerte si on clique sur le lien Graphes-->
+<script>
+    document.getElementById('afficher-graphes').addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const gouvernorat = document.getElementById('select-gouvernorat').value;
+        const delegation = document.getElementById('select-delegation').value;
+        const secteur = document.getElementById('select-secteur').value;
+
+        if (!gouvernorat || !delegation || !secteur) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Attention',
+                text: 'Il faut choisir l\'emplacement et au moins un opérateur',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6'
+            });
+            return;
+        }
+
+        
+    });
+</script>
+
+<!-- fonction pour masquer la paragraphe à propos-->
+<script>
+    function hideInfoParagraph() {
+    const infoParagraph = document.getElementById('info-paragraph');
+    if (infoParagraph) {
+        infoParagraph.style.display = 'none';
+    }
+}
+
+</script>
+
+
+<script>
+async function visualizeOnMap(indicator, secteurFull = null) {
+    
+    const mainMap = document.getElementById('map');
+    const layerControl = document.getElementById('layer-control');
+    const mapContainer = document.getElementById('map-container');
+    const existingMultiMaps = document.getElementById('multi-maps-container');
+
+    if (existingMultiMaps) existingMultiMaps.remove();
+    if (mainMap) mainMap.style.display = 'block';
+    if (layerControl) layerControl.style.display = 'block';
+
+    const selectedOperators = Array.from(document.querySelectorAll('.operator-card.selected'));
+    if (selectedOperators.length === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Veuillez sélectionner au moins un opérateur',
+        });
+        return;
+    }
+
+    if (mainMap) mainMap.style.display = 'none';
+    if (layerControl) layerControl.style.display = 'none';
+
+    const multiMapsContainer = document.createElement('div');
+    multiMapsContainer.id = 'multi-maps-container';
+    multiMapsContainer.className = 'row g-2';
+    mapContainer.appendChild(multiMapsContainer);
+
+    const colSize = Math.floor(12 / selectedOperators.length);
+
+    for (const operatorCard of selectedOperators) {
+        const operator = operatorCard.dataset.operator;
+        const gouvernorat = document.getElementById('select-gouvernorat').value;
+        const delegation = document.getElementById('select-delegation').value;
+        const coverageType = indicator.includes('2G') ? 'GSM' : 'UMTS';
+        const secteur = secteurFull ? secteurFull.split(' - ').pop().trim() : null;
+
+        const mapCol = document.createElement('div');
+        mapCol.className = `col-12 col-md-${colSize} mb-3`;
+        mapCol.innerHTML = `
+            <div class="card h-100">
+                <div class="card-header p-2 bg-primary text-white">
+                    ${operator}
+                </div>
+                <div id="map-${operator.replace(/ /g, '-')}" class="map-subcontainer" style="height: 400px"></div>
+            </div>
+        `;
+        multiMapsContainer.appendChild(mapCol);
+
+        try {
+            const selectedYear = document.getElementById('select-annee').value;
+            const selectedMonth = document.getElementById('select-mois').value;
+            const response = await fetch('/get-coverage-layer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gouvernorat,
+                    delegation: delegation || null,
+                    operator,
+                    coverage_type: coverageType,
+                    secteur: secteur,
+                    year: selectedYear || null, // Ajouter ces 2 lignes
+                    month: selectedMonth || null
+                })
+            });
+
+            if (!response.ok) throw new Error('Erreur de chargement des données');
+
+            const data = await response.json();
+
+            // Supprimer les points avec latitude ou longitude = 0
+            data.geojson.features = data.geojson.features.filter(feature => {
+                const coords = feature.geometry?.coordinates;
+                if (!coords || coords.length < 2) return false;
+                const [lng, lat] = coords;
+                return lng !== 0 && lat !== 0;
+            });
+
+            const mapId = `map-${operator.replace(/ /g, '-')}`;
+            const subMap = L.map(mapId, {
+                attributionControl: false,
+                zoomControl: false
+            }).setView([36.8, 10.2], 8);  // Zoom initial sur la Tunisie
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(subMap);
+
+            const coverageLayer = L.geoJSON(data.geojson, {
+                pointToLayer: (feature, latlng) => {
+                    const puissance = parseFloat(feature.properties.Puissance);
+                    let fillColor = "#777";
+
+                    if (coverageType === 'GSM') {
+                        fillColor = puissance >= -90 ? '#0f9131' : '#ff0000';
+                    } else {
+                        fillColor = puissance >= -98 ? '#0f9131' : '#ff0000';
+                    }
+
+                    return L.circleMarker(latlng, {
+                        radius: 4,
+                        fillColor: fillColor,
+                        color: null,
+                        weight: 0,
+                        fillOpacity: 0.8
+                    });
+                }
+            }).addTo(subMap);
+
+            // Zoom uniquement si les bounds sont valides
+            setTimeout(() => {
+                const bounds = coverageLayer.getBounds();
+                if (bounds.isValid()) {
+                    subMap.fitBounds(bounds, { padding: [20, 20] });
+                }
+            }, 300);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(subMap);
+            L.control.attribution({ position: 'bottomleft' }).addTo(subMap);
+
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: error.message,
+            });
+        }
+    }
+
+    mapContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+    function resetMapToInitialState() {
+    // Supprimer les cartes multiples si elles existent
+    const multiMapsContainer = document.getElementById('multi-maps-container');
+    if (multiMapsContainer) multiMapsContainer.remove();
+    
+    // Réafficher la carte principale et les contrôles
+    const mainMap = document.getElementById('map');
+    const layerControl = document.getElementById('layer-control');
+    
+    if (mainMap) {
+        mainMap.style.display = 'block';
+        // Réinitialiser la vue si nécessaire
+        window.map.setView([37.05, 11.00], 9); 
+    }
+    if (layerControl) layerControl.style.display = 'block';
+    
+    
+}
+</script>
+<script>
+function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('username').value.trim();
+    
+    if (!email) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Veuillez entrer votre email pour réinitialiser le mot de passe.'
+        });
+        return;
+    }
+
+    fetch('/forgot_password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Email envoyé',
+                text: 'Un email avec le lien de réinitialisation a été envoyé.'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: data.message
+            });
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur de communication avec le serveur'
+        });
+    });
+}
+</script>
+<!-- Modal Connexion Admin -->
+<div class="modal fade" id="adminLoginModal" tabindex="-1" aria-labelledby="adminLoginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Agrandi avec modal-lg -->
+      <div class="modal-content p-4" style="border-radius: 20px; background-color: #f8f9fa; max-width: 600px; margin: auto;">
+        
+        <div class="modal-header border-0 justify-content-center">
+          <h4 class="modal-title fw-bold text-center" id="adminLoginModalLabel" style="color: #5b2be0;">
+            <i class="bi bi-shield-lock-fill me-2"></i> Connexion Admin
+          </h4>
+        </div>
+        <!-- Messages d'erreur -->
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show mx-4 mt-2" role="alert">
+                    {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+        <form method="POST" action="/admin/login" class="px-4 pb-3">
+          <div class="modal-body pt-0">
+            <div class="mb-3">
+              <label for="username" class="form-label">Nom d'utilisateur</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                <input type="text" autocomplete="off" class="form-control" id="username" name="username" required placeholder="Entrez votre identifiant">
+              </div>
+            </div>
+  
+            <div class="mb-4">
+              <label for="password" class="form-label">Mot de passe</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                <input type="password" autocomplete="off" class="form-control" id="password" name="password" required placeholder="Entrez votre mot de passe">
+              </div>
+            </div>
+  
+            <div class="text-center mb-3">
+              <button type="submit" class="btn text-white px-5 py-2" style="
+                background: linear-gradient(to right, #8e2de2, #18A0FB);
+                border: none;
+                border-radius: 30px;
+                font-weight: 500;
+                font-size: 1rem;
+                transition: background 0.3s ease;">
+                Se connecter
+              </button>
+            </div>
+  
+            <div class="text-center">
+              <a href="#" class="text-decoration-none" onclick="handleForgotPassword(event)" style="color: #6c757d; font-size: 0.9rem;">
+                <i class="bi bi-question-circle me-1"></i> Vous avez oublié le mot de passe ?
+              </a>
+            </div>
+          </div>
+        </form>
+  
+      </div>
+    </div>
+  </div>
+  
+   
+</body>
+</html>
