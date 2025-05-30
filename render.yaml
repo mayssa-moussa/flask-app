@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ton-app
+    env: python
+    buildCommand: |
+      apt-get update && \
+      apt-get install -y gdal-bin python3-gdal python3-dev && \
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    plan: free
